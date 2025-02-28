@@ -108,6 +108,8 @@ export class IdeMessenger implements IIdeMessenger {
       data,
     };
 
+    console.log(msg);
+    console.log(typeof vscode.postMessage);
     vscode.postMessage(msg);
   }
 

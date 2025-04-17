@@ -53,6 +53,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     void,
   ];
   "edit/exit": [{ shouldFocusEditor: boolean }, void];
+  bumpWithExtensions: [undefined, boolean];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

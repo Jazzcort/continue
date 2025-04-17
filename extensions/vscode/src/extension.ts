@@ -16,6 +16,11 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   return await activateExtension(context);
 }
 
+function bumpWithExtension(id: string): boolean {
+  const extensions = vscode.extensions.all;
+  return extensions.find((e) => e.id === id) !== undefined;
+}
+
 export function activate(context: vscode.ExtensionContext) {
   return dynamicImportAndActivate(context).catch((e) => {
     console.log("Error activating extension: ", e);

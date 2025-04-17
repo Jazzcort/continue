@@ -122,3 +122,16 @@ export function getExtensionVersion(): string {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "0.1.0";
 }
+
+const incompatibleExtensionIds = new Set(["redhat.granitecode"]);
+export function bumpWithExtensions(): boolean {
+  const extensions = vscode.extensions.all;
+
+  for (const e of extensions) {
+    if (incompatibleExtensionIds.has(e.id)) {
+      return true;
+    }
+  }
+
+  return false;
+}

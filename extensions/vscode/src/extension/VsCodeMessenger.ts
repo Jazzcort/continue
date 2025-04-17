@@ -23,6 +23,7 @@ import {
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
 import { showTutorial } from "../util/tutorial";
+import { bumpWithExtensions } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -232,6 +233,13 @@ export class VsCodeMessenger {
       }
 
       editDecorationManager.clear();
+    });
+
+    this.onWebview("bumpWithExtensions", () => {
+      // if (bumpWithExtensions()) {
+      //   this.webviewProtocol.request("navigateTo", { path: "/bump" });
+      // }
+      return bumpWithExtensions();
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

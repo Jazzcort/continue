@@ -150,6 +150,15 @@ export function Chat() {
     };
   }, [isStreaming]);
 
+  // useEffect(() => {
+  //   ideMessenger.request("bumpWithExtensions", undefined).then((didBump) => {
+  //     console.log(didBump, "bumped!!!!!");
+  //     if (didBump.status === "success" && didBump.content) {
+  //       console.log("hahahah");
+  //     }
+  //   });
+  // }, []);
+
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
   const sendInput = useCallback(

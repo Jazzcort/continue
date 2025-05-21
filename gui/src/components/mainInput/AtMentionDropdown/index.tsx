@@ -306,7 +306,9 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
   }, [querySubmenuItem, queryInputRef]);
 
   const selectItem = (index: number) => {
+    console.log(allItems, "all items from AtMentionDropdown");
     const item = allItems[index];
+    console.log(item, index, "Item from AtMentionDropdown");
 
     if (item.type === "action" && item.action) {
       item.action();
@@ -345,6 +347,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
           handleItemTooBig(fileExceeds, fileSize, item),
         );
       } else {
+        console.log(item.type, "hahahah");
         props.command({ ...item, itemType: item.type });
       }
     }

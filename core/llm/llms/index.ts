@@ -35,6 +35,7 @@ import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import LMStudio from "./LMStudio";
+import LocalNomic from "./LocalNomic";
 import Mistral from "./Mistral";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
@@ -65,6 +66,7 @@ import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
 export const LLMClasses = [
+  LocalNomic,
   Anthropic,
   Cohere,
   FreeTrial,

@@ -203,6 +203,10 @@ export default class DocsService {
     }
     const metadata = await this.listMetadata();
 
+    console.log(metadata, "meta data from DocsService.ts");
+
+    console.log(this.config.docs);
+    console.log(this.statuses, "statuses map from DocsService.ts before");
     this.config.docs?.forEach((doc) => {
       if (!doc.startUrl) {
         console.error("Invalid config docs entry, no start url", doc.title);
@@ -247,7 +251,9 @@ export default class DocsService {
             status: "complete",
           };
       this.handleStatusUpdate(indexedStatus);
+      console.log(indexedStatus, "indexedStatus!!!! from DocsService.ts");
     });
+    console.log(this.statuses, "statuses map from DocsService.ts after");
   }
 
   abort(startUrl: string) {
@@ -601,6 +607,7 @@ export default class DocsService {
         usedCrawler === "github"
           ? markdownPageToArticleWithChunks
           : htmlPageToArticleWithChunks;
+      console.log(usedCrawler, "usedCrawler!!!!");
       for (const page of pages) {
         const articleWithChunks = await articleChunker(
           page,
@@ -613,36 +620,125 @@ export default class DocsService {
         await new Promise((resolve) => setTimeout(resolve, toWait));
       }
 
+      let chunkNumber = articles.reduce(
+        (acc, cur) => acc + cur.chunks.length,
+        0,
+      );
+      let totalChar = articles.reduce(
+        (acc, cur) =>
+          acc + cur.chunks.reduce((a, c) => a + c.content.length, 0),
+        0,
+      );
+
+      console.log(chunkNumber, "chunkNumber!!!!!");
+      console.log(totalChar, "totalChar!!!!");
+      const fullArticle = articles.map((article) =>
+        article.chunks.map((c) => c.content).join("\n"),
+      );
+      // fullArticle.forEach((article) => console.log(article));
+
       // const chunks: Chunk[] = [];
       const embeddings: number[][] = [];
+      let failedChunks = 0;
+
+      const embedPromises: Promise<void>[] = [];
+
+      let successCounts = 0;
 
       // Create embeddings of retrieved articles
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
 
+        console.log(`${i + 1} / ${articles.length}`);
+
         if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
-        this.handleStatusUpdate({
-          ...fixedStatus,
-          status: "indexing",
-          description: `Creating Embeddings: ${article.article.subpath}`,
-          progress: 0.5 + 0.3 * (i / articles.length), // 50% -> 80%
+
+        const maxRetryTimes = 5;
+
+        const promise: Promise<void> = new Promise(async (resolve, reject) => {
+          if (article.chunks.length <= 0) {
+            successCounts++;
+            this.handleStatusUpdate({
+              ...fixedStatus,
+              status: "indexing",
+              description: `Creating Embeddings: ${article.article.subpath}`,
+              progress: 0.5 + 0.3 * (successCounts / articles.length), // 50% -> 80%
+            });
+            return resolve();
+          }
+
+          let retries = maxRetryTimes;
+          let didEmbed = false;
+
+          while (retries > 0) {
+            const delay =
+              100 * this.docsIndexingQueue.size +
+              50 +
+              Math.pow(3, maxRetryTimes - retries) * 1000;
+
+            retries--;
+
+            await new Promise((resolve) => setTimeout(resolve, delay));
+
+            try {
+              const subpathEmbeddings = await provider.embed(
+                article.chunks.map((c) => c.content),
+              );
+              chunks.push(...article.chunks);
+              embeddings.push(...subpathEmbeddings);
+              successCounts++;
+              this.handleStatusUpdate({
+                ...fixedStatus,
+                status: "indexing",
+                description: `Creating Embeddings: ${article.article.subpath}`,
+                progress: 0.5 + 0.3 * (successCounts / articles.length), // 50% -> 80%
+              });
+              didEmbed = true;
+              break;
+            } catch (e) {
+              console.warn(`Embedding failed: ${e}, ${retries}`);
+            }
+          }
+
+          return didEmbed ? resolve() : reject();
         });
 
-        try {
-          const subpathEmbeddings =
-            article.chunks.length > 0
-              ? await provider.embed(article.chunks.map((c) => c.content))
-              : [];
-          chunks.push(...article.chunks);
-          embeddings.push(...subpathEmbeddings);
-          const toWait = 100 * this.docsIndexingQueue.size + 50;
-          await new Promise((resolve) => setTimeout(resolve, toWait));
-        } catch (e) {
-          console.warn("Error embedding article chunks: ", e);
-        }
+        embedPromises.push(promise);
+
+        // this.handleStatusUpdate({
+        //   ...fixedStatus,
+        //   status: "indexing",
+        //   description: `Creating Embeddings: ${article.article.subpath}`,
+        //   progress: 0.5 + 0.3 * (i / articles.length), // 50% -> 80%
+        // });
+
+        // article.chunks.forEach(
+        //   (c) => console.log(c.content.length),
+        //   "chunk content length!!",
+        // );
+
+        // try {
+        //   const subpathEmbeddings =
+        //     article.chunks.length > 0
+        //       ? await provider.embed(article.chunks.map((c) => c.content))
+        //       : [];
+        //   chunks.push(...article.chunks);
+
+        //   embeddings.push(...subpathEmbeddings);
+        //   const toWait = 100 * this.docsIndexingQueue.size + 50;
+        //   await new Promise((resolve) => setTimeout(resolve, toWait));
+        // } catch (e) {
+        //   console.warn("Error embedding article chunks: ", e);
+        //   failedChunks += article.chunks.length;
+
+        //   console.log(`Failed: ${i + 1}`);
+        // }
       }
+
+      const embedResult = await Promise.allSettled(embedPromises);
+      console.log(embedResult, "embedResult!!!!!");
 
       if (embeddings.length === 0) {
         console.error(
@@ -666,6 +762,8 @@ export default class DocsService {
 
       // Add docs to databases
       console.log(`Adding ${embeddings.length} embeddings to db`);
+
+      console.log(`Failed to add ${failedChunks} embeddings to db`);
 
       if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
@@ -792,6 +890,7 @@ export default class DocsService {
     nRetrieve: number,
   ) {
     const { provider } = await this.getEmbeddingsProvider();
+    console.log(query, "query!!! from DocsService.ts");
 
     if (!provider) {
       void this.ide.showToast(
@@ -801,6 +900,7 @@ export default class DocsService {
       );
       return [];
     }
+    console.log(provider.maxEmbeddingChunkSize, provider.maxEmbeddingBatchSize);
 
     // Try to get embeddings for the query
     const [vector] = await provider.embed([query]);
@@ -897,6 +997,8 @@ export default class DocsService {
     } catch (e: any) {
       console.warn("Error retrieving chunks from LanceDB", e);
     }
+
+    console.log(docs.length, isRetry, "docs.length and isRetry!!!!");
 
     // If no docs are found and this isn't a retry, try fetching from cache
     if (docs.length === 0 && !isRetry) {
@@ -1139,6 +1241,7 @@ export default class DocsService {
     const table = await conn.openTable(tableNameFromEmbeddingsProvider);
 
     this.lanceTableNamesSet.add(tableNameFromEmbeddingsProvider);
+    console.log(this.lanceTableNamesSet, "name set!!!!");
 
     return table;
   }
@@ -1188,6 +1291,14 @@ export default class DocsService {
       favicon,
       this.config.selectedModelByRole.embed.embeddingId,
     );
+
+    console.log(DocsService.sqlitebTableName, "sqlite tab name");
+    console.log(
+      title,
+      startUrl,
+      this.config.selectedModelByRole.embed.embeddingId,
+      "sqlite row details",
+    );
   }
 
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
@@ -1236,12 +1347,20 @@ export default class DocsService {
     if (!lance) {
       return;
     }
+    let deletedCounts = 0;
 
     for (const tableName of this.lanceTableNamesSet) {
+      console.log(tableName, "table name!!!!!!");
       const conn = await lance.connect(getLanceDbPath());
       const table = await conn.openTable(tableName);
+
+      console.log(await table.countRows(), "row counts before delete");
+
       await table.delete(`starturl = '${startUrl}'`);
+      console.log(await table.countRows(), "row counts after delete");
+      deletedCounts++;
     }
+    console.log(deletedCounts, "deletedCounts");
   }
 
   private async deleteMetadataFromSqlite(startUrl: string) {

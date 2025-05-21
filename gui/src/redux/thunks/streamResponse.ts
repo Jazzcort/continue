@@ -56,6 +56,8 @@ export const streamResponseThunk = createAsyncThunk<
             promptPreamble,
           }),
         );
+
+        console.log(result, "context result from streamResponse.ts");
         const {
           selectedContextItems,
           selectedCode,

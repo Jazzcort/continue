@@ -245,6 +245,7 @@ async function gatherContextItems({
 
   // Process context item attributes
   for (const item of contextItemAttrs) {
+    console.log(item, "item from resolveEditorContent.ts");
     const result = await ideMessenger.request("context/getContextItems", {
       name: item.itemType === "contextProvider" ? item.id : item.itemType!,
       query: item.query ?? "",
@@ -286,7 +287,14 @@ async function gatherContextItems({
       }
     }),
   );
+
+  console.log(
+    defaultContextItems,
+    "defaultContextItems from resolveEditorContent.ts",
+  );
   contextItems.push(...defaultContextItems.flat());
+
+  console.log(contextItems, "contextItems!!!! from resolveEditorContent.ts");
 
   return contextItems;
 }

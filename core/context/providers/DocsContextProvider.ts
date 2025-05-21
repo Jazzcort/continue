@@ -97,6 +97,15 @@ class DocsContextProvider extends BaseContextProvider {
       return [];
     }
 
+    console.log(chunks, "chunks!!!! from DocsContextProvider.ts");
+
+    const chunksContent = chunks.map((chunk) => chunk.content);
+    const fullContent = chunksContent.join(
+      "\n################################################\n",
+    );
+
+    console.log(fullContent);
+
     // We found chunks, so check if there's a favicon for the docs page
     const favicon = await docsService.getFavicon(query);
 

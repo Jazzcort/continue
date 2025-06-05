@@ -31,7 +31,10 @@ import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
-import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
+import {
+  getWorkspaceContinueRuleDotFiles,
+  getWorkspaceGraniteRuleDotFiles,
+} from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
@@ -129,6 +132,12 @@ export default async function doLoadConfig(options: {
     await getWorkspaceContinueRuleDotFiles(ide);
   newConfig.rules.unshift(...rules);
   errors.push(...continueRulesErrors);
+
+  // Add rules from .graniterules files
+  const { rules: graniteRules, errors: graniteRulesErrors } =
+    await getWorkspaceGraniteRuleDotFiles(ide);
+  newConfig.rules.unshift(...graniteRules);
+  errors.push(...graniteRulesErrors);
 
   // Add rules from markdown files in .continue/rules
   const { rules: markdownRules, errors: markdownRulesErrors } =

@@ -236,6 +236,16 @@ const Layout = () => {
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+
+            <button
+              className="absolute bottom-2 right-2"
+              onClick={async () => {
+                const res = await ideMessenger.ide.getFileResults("");
+                console.log(res, "getFileResults!!!");
+              }}
+            >
+              test!!
+            </button>
           </LumpProvider>
         </LayoutTopDiv>
       </AuthProvider>

@@ -315,6 +315,7 @@ export async function getIgnoreContext(
   const continueIgnoreFile = dirFiles.find(
     (name) => name === ".continueignore",
   );
+  const graniteIgnoreFile = dirFiles.find((name) => name === ".graniteignore");
 
   const getGitIgnorePatterns = async () => {
     if (gitIgnoreFile) {
@@ -330,10 +331,18 @@ export async function getIgnoreContext(
     }
     return [];
   };
+  const getGraniteIgnorePatterns = async () => {
+    if (graniteIgnoreFile) {
+      const contents = await ide.readFile(`${currentDir}/.graniteignore`);
+      return gitIgArrayFromFile(contents);
+    }
+    return [];
+  };
 
   const ignoreArrays = await Promise.all([
     getGitIgnorePatterns(),
     getContinueIgnorePatterns(),
+    getGraniteIgnorePatterns(),
   ]);
 
   if (ignoreArrays[0].length === 0 && ignoreArrays[1].length === 0) {
@@ -344,7 +353,8 @@ export async function getIgnoreContext(
   const ignoreContext = ignore()
     .add(ignoreArrays[0]) // gitignore
     .add(defaultAndGlobalIgnores) // default file/folder ignores followed by global .continueignore - this is combined for speed
-    .add(ignoreArrays[1]); // local .continueignore
+    .add(ignoreArrays[1]) // local .continueignore
+    .add(ignoreArrays[2]); // local .graniteignore
 
   return ignoreContext;
 }

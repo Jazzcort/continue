@@ -29,6 +29,8 @@ const getSourceLabel = (source: RuleSource): string => {
       return "System Message";
     case ".continuerules":
       return "Project Rules";
+    case ".graniterules":
+      return "Project Rules";
     default:
       return source;
   }

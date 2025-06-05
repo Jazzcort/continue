@@ -4,7 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
-import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
+import {
+  GRANITE_SYSTEM_PROMPT_DOT_FILE,
+  SYSTEM_PROMPT_DOT_FILE,
+} from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
@@ -820,11 +823,13 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
+          uri.endsWith(GRANITE_SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml"))
         ) {
           await this.configHandler.reloadConfig();
         } else if (
           uri.endsWith(".continueignore") ||
+          uri.endsWith(".graniteignore") ||
           uri.endsWith(".gitignore")
         ) {
           // Reindex the workspaces

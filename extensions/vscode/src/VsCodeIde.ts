@@ -3,8 +3,6 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -406,6 +404,7 @@ class VsCodeIde implements IDE {
   }
 
   runRipgrepQuery(dirUri: string, args: string[]) {
+    console.log(dirUri, "dirUri from VsCodeIde.ts");
     const relativeDir = vscode.Uri.parse(dirUri).fsPath;
     const ripGrepUri = vscode.Uri.joinPath(
       getExtensionUri(),
@@ -445,6 +444,10 @@ class VsCodeIde implements IDE {
       const ignoreFiles = await vscode.workspace.findFiles(
         "**/.continueignore",
         null,
+      );
+
+      ignoreFiles.push(
+        ...(await vscode.workspace.findFiles("**/.graniteignore", null)),
       );
 
       const ignoreGlobs: Set<string> = new Set();
@@ -500,6 +503,8 @@ class VsCodeIde implements IDE {
 
       const ignoreGlobsArray = Array.from(ignoreGlobs);
 
+      console.log(ignoreGlobsArray, "ignoreGlobsArray from VsCodeIde.ts");
+
       const results = await vscode.workspace.findFiles(
         pattern,
         ignoreGlobs.size ? `{${ignoreGlobsArray.join(",")}}` : null,
@@ -517,7 +522,11 @@ class VsCodeIde implements IDE {
           ".continueignore",
           "--ignore-file",
           ".gitignore",
+          "--ignore-file",
+          ".graniteignore",
         ]);
+
+        console.log(dirResults.split("\n"), "dirResults from VscodeIde.ts");
 
         results.push(dirResults);
       }
@@ -538,6 +547,8 @@ class VsCodeIde implements IDE {
         ".continueignore",
         "--ignore-file",
         ".gitignore",
+        "--ignore-file",
+        ".graniteignore",
         "-C",
         "2", // Show 2 lines of context
         "--heading", // Only show filepath once per result

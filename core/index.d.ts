@@ -1561,7 +1561,8 @@ export type RuleSource =
   | "model-agent-options"
   | "rules-block"
   | "json-systemMessage"
-  | ".continuerules";
+  | ".continuerules"
+  | ".graniterules";
 
 export interface RuleWithSource {
   name?: string;

@@ -324,6 +324,7 @@ export class VsCodeMessenger {
       return ide.getSearchResults(msg.data.query);
     });
     this.onWebviewOrCore("getFileResults", async (msg) => {
+      console.log(msg.data.pattern, "pattern from VsCodeMessenger.ts");
       return ide.getFileResults(msg.data.pattern);
     });
     this.onWebviewOrCore("subprocess", async (msg) => {

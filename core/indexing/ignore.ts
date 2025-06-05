@@ -2,7 +2,10 @@ import fs from "fs";
 
 import ignore from "ignore";
 
-import { getGlobalContinueIgnorePath } from "../util/paths";
+import {
+  getGlobalContinueIgnorePath,
+  getGlobalGraniteIgnorePath,
+} from "../util/paths";
 
 export const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
@@ -67,6 +70,9 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.gitignore",
   "*.gitkeep",
   "*.continueignore",
+  "*.continuerules",
+  "*.graniteignore",
+  "*.graniterules",
   "config.json",
   "config.yaml",
   "*.csv",
@@ -126,6 +132,17 @@ export function gitIgArrayFromFile(file: string) {
 }
 
 export const getGlobalContinueIgArray = () => {
-  const contents = fs.readFileSync(getGlobalContinueIgnorePath(), "utf8");
-  return gitIgArrayFromFile(contents);
+  const continueIgContents = fs.readFileSync(
+    getGlobalContinueIgnorePath(),
+    "utf8",
+  );
+  const graniteIgContents = fs.readFileSync(
+    getGlobalGraniteIgnorePath(),
+    "utf8",
+  );
+
+  const ignoreArray = gitIgArrayFromFile(continueIgContents);
+  ignoreArray.push(...gitIgArrayFromFile(graniteIgContents));
+
+  return ignoreArray;
 };

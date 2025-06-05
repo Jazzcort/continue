@@ -55,6 +55,17 @@ export function getGlobalContinueIgnorePath(): string {
   return continueIgnorePath;
 }
 
+export function getGlobalGraniteIgnorePath(): string {
+  const graniteIgnorePath = path.join(
+    getContinueGlobalPath(),
+    ".graniteignore",
+  );
+  if (!fs.existsSync(graniteIgnorePath)) {
+    fs.writeFileSync(graniteIgnorePath, "");
+  }
+  return graniteIgnorePath;
+}
+
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
   const continuePath = CONTINUE_GLOBAL_DIR;

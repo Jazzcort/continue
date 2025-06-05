@@ -1,7 +1,6 @@
 import * as fs from "fs/promises";
 
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
@@ -281,6 +280,8 @@ export class CodebaseIndexer {
   ): AsyncGenerator<IndexingProgressUpdate> {
     let progress = 0;
 
+    console.log(dirs, "dirs refreshDirs() in CodebaseIndexer.ts");
+
     if (dirs.length === 0) {
       yield {
         progress: 1,
@@ -552,7 +553,7 @@ export class CodebaseIndexer {
   private async updateProgress(update: IndexingProgressUpdate) {
     this.codebaseIndexingState = update;
     if (this.messenger) {
-      await this.messenger.request("indexProgress", update);
+      this.messenger.send("indexProgress", update);
     }
   }
 
@@ -582,6 +583,7 @@ export class CodebaseIndexer {
         paths,
         this.indexingCancellationController.signal,
       )) {
+        console.log(update, "update from CodebaseIndexer.ts");
         await this.updateProgress(update);
 
         if (update.status === "failed") {

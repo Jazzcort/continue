@@ -663,6 +663,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     configurationStatus: llm.getConfigurationStatus(),
     apiKeyLocation: llm.apiKeyLocation,
     envSecretLocations: llm.envSecretLocations,
+    sourceFile: llm.sourceFile,
   };
 }
 

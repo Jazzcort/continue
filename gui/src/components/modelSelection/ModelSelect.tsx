@@ -10,7 +10,6 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { AddModelForm } from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { EMPTY_CONFIG } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import {
@@ -36,6 +35,7 @@ interface Option {
   value: string;
   title: string;
   apiKey?: string;
+  sourceFile?: string;
 }
 
 function modelSelectTitle(model: any): string {
@@ -55,8 +55,6 @@ function ModelOption({
   showMissingApiKeyMsg,
   isSelected,
 }: ModelOptionProps) {
-  const ideMessenger = useContext(IdeMessengerContext);
-
   function handleOptionClick(e: any) {
     if (showMissingApiKeyMsg) {
       e.preventDefault();
@@ -94,6 +92,7 @@ function ModelSelect() {
 
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const config = useAppSelector((state) => state.config.config);
+  const isConfigLoading = useAppSelector((state) => state.config.loading);
   const ideMessenger = useContext(IdeMessengerContext);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
@@ -131,6 +130,7 @@ function ModelSelect() {
           value: model.title,
           title: modelSelectTitle(model),
           apiKey: model.apiKey,
+          sourceFile: model.sourceFile,
         };
       }),
     );
@@ -191,7 +191,6 @@ function ModelSelect() {
     );
   }
 
-  const isConfigLoading = config === EMPTY_CONFIG;
   const hasNoModels = allModels?.length === 0;
 
   return (
@@ -229,6 +228,7 @@ function ModelSelect() {
               onClick={() =>
                 ideMessenger.post("config/openProfile", {
                   profileId: undefined,
+                  element: { sourceFile: selectedModel?.sourceFile },
                 })
               }
             />
